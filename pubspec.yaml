@@ -1,0 +1,15 @@
+name: dezerv_env_generator
+description: The code generator for project environment configuration.
+version: 1.0.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  build: ^2.4.1
+  source_gen: ^1.5.0
+  analyzer: ^5.13.0
+  # The annotation this generator looks for
+  dezerv_env_annotation:
+    path: ../dezerv_env_annotation

@@ -1,0 +1,10 @@
+# dezerv_env_generator/build.yaml
+
+builders:
+  dezerv_env_builder:
+    import: "package:dezerv_env_generator/builder.dart"
+    builder_factories: ["environmentBuilder"]
+    # This line is the rule. It says: "I ONLY run on files ending in .env.dart"
+    build_extensions: {".env.dart": [".g.dart"]}
+    auto_apply: dependents
+    build_to: source
