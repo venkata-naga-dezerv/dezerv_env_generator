@@ -10,6 +10,4 @@ dependencies:
   build: ^2.4.1
   source_gen: ^1.5.0
   analyzer: ^5.13.0
-  # The annotation this generator looks for
-  dezerv_env_annotation:
-    path: ../dezerv_env_annotation
+  flutter_config: 2.0.2

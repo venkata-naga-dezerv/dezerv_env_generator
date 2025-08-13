@@ -1,0 +1,3 @@
+class DezervEnvironment {
+  const DezervEnvironment();
+}

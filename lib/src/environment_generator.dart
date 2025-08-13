@@ -1,10 +1,16 @@
 import 'dart:io';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
-import 'package:dezerv_env_annotation/dezerv_env_annotation.dart';
+import 'package:dezerv_env_generator/dezerv_env_annotation.dart';
 import 'package:source_gen/source_gen.dart';
 
 class EnvironmentGenerator extends GeneratorForAnnotation<DezervEnvironment> {
+  // Add a field to hold the path.
+  final String envPath;
+
+  // Add a constructor to receive the path.
+  EnvironmentGenerator(this.envPath);
+
   @override
   String generateForAnnotatedElement(
     Element element,
@@ -15,9 +21,11 @@ class EnvironmentGenerator extends GeneratorForAnnotation<DezervEnvironment> {
       return '';
     }
 
-    final envFile = File('.env');
+    // Use the path passed from the builder.
+    final envFile = File(envPath);
     if (!envFile.existsSync()) {
-      throw Exception('Generator Error: `.env` file not found.');
+      // Make the error message more helpful.
+      throw Exception('Generator Error: `$envPath` file not found.');
     }
 
     final lines = envFile.readAsLinesSync();
@@ -34,19 +42,21 @@ class EnvironmentGenerator extends GeneratorForAnnotation<DezervEnvironment> {
 
     final fieldNames = envMap.keys.toList();
     if (fieldNames.isEmpty) {
-      throw Exception('Generator Error: `.env` file is empty.');
+      throw Exception('Generator Error: `$envPath` file is empty.');
     }
 
     final buffer = StringBuffer();
+    // Your helper methods remain the same...
     _generateHeader(buffer);
     _generateAppEnvironmentInterface(buffer, fieldNames);
-    _generateEnviedWebConfig(buffer, fieldNames, envMap); // For web
+    _generateWebFromEnvironment(buffer, fieldNames); // For web
     _generateFlutterConfigMobile(buffer, fieldNames); // For mobile
     _generateAppConfigFacade(buffer, fieldNames);
 
     return buffer.toString();
   }
 
+  // No changes needed in the helper methods below this line
   String _escapeDartString(String value) {
     return value.replaceAll(r'\', r'\\').replaceAll("'", r"\'");
   }
@@ -66,6 +76,7 @@ class EnvironmentGenerator extends GeneratorForAnnotation<DezervEnvironment> {
   void _generateHeader(StringBuffer buffer) {
     buffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
     buffer.writeln('// ignore_for_file: constant_identifier_names');
+    // Import necessary packages for the generated code
     buffer.writeln();
   }
 
@@ -78,15 +89,19 @@ class EnvironmentGenerator extends GeneratorForAnnotation<DezervEnvironment> {
     buffer.writeln('}');
   }
 
-  void _generateEnviedWebConfig(StringBuffer buffer, List<String> fieldNames,
-      Map<String, String> envMap) {
-    buffer.writeln('\n/// Web implementation (uses compile-time constants)');
+  void _generateWebFromEnvironment(
+      StringBuffer buffer, List<String> fieldNames) {
+    buffer.writeln('\n/// Web implementation (uses --dart-define for values)');
     buffer.writeln('class _WebEnvConfig implements AppEnvironment {');
     buffer.writeln('  const _WebEnvConfig();');
+
     for (final field in fieldNames) {
       final camel = _toCamelCase(field);
-      final value = envMap[field]!;
-      buffer.writeln("  @override\n  String get $camel => '$value';");
+      // This is the key change: Generate code that uses String.fromEnvironment.
+      // The key MUST match the original from the .env file (e.g., 'DEFAULT_BASE_URL').
+      // Adding a defaultValue is excellent for debugging.
+      buffer.writeln(
+          "  @override\n  String get $camel => const String.fromEnvironment('$field');");
     }
     buffer.writeln('}');
   }
